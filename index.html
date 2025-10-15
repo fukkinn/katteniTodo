@@ -1,45 +1,23 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Simple ToDo App</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ToDoアプリ</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <main class="container" role="main" aria-labelledby="app-title">
-    <header>
-      <div>
-        <h1 id="app-title">Simple ToDo</h1>
-        <div class="subtitle">軽量でローカル保存されるToDoアプリ</div>
-      </div>
-    </header>
+  <div class="container">
+    <h1>📝 ToDoリスト</h1>
 
-    <section class="editor" aria-label="タスク編集">
-      <div class="input-row">
-        <input id="todo-input" type="text" placeholder="新しいタスクを入力して Enter または追加ボタン" aria-label="新しいタスク">
-        <button id="add-btn" aria-label="タスクを追加">追加</button>
-      </div>
+    <div class="input-area">
+      <input type="text" id="taskInput" placeholder="やることを入力...">
+      <input type="date" id="deadlineInput">
+      <button id="addBtn">追加</button>
+    </div>
 
-      <div class="controls">
-        <div class="filters" role="tablist" aria-label="フィルター">
-          <button data-filter="all" class="active" role="tab" aria-selected="true">All</button>
-          <button data-filter="active" role="tab" aria-selected="false">Active</button>
-          <button data-filter="completed" role="tab" aria-selected="false">Completed</button>
-        </div>
-        <div class="search-clear">
-          <button id="clear-completed" title="完了済みを全削除">Clear completed</button>
-        </div>
-      </div>
-
-      <ul id="todo-list" class="list" aria-live="polite"></ul>
-
-      <div class="footer">
-        <div id="count">0 items left</div>
-        <div class="subtitle">保存: localStorage</div>
-      </div>
-    </section>
-  </main>
+    <ul id="taskList"></ul>
+  </div>
 
   <script src="script.js"></script>
 </body>
