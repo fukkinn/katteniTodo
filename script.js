@@ -1,45 +1,121 @@
-const addBtn = document.getElementById('addBtn');
-const taskInput = document.getElementById('taskInput');
-const deadlineInput = document.getElementById('deadlineInput');
-const taskList = document.getElementById('taskList');
+(() => {
+  const STORAGE_KEY = 'simple_todo_v1';
+  const input = document.getElementById('todo-input');
+  const addBtn = document.getElementById('add-btn');
+  const listEl = document.getElementById('todo-list');
+  const filters = document.querySelectorAll('.filters button');
+  const clearBtn = document.getElementById('clear-completed');
+  const countEl = document.getElementById('count');
 
-addBtn.addEventListener('click', addTask);
+  let todos = [];
+  let currentFilter = 'all';
 
-function addTask() {
-  const taskText = taskInput.value.trim();
-  const deadline = deadlineInput.value;
-
-  if (!taskText) {
-    alert('タスクを入力してください！');
-    return;
+  function save() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
   }
 
-  // li要素を作成
-  const li = document.createElement('li');
-  const today = new Date();
-  const deadlineDate = new Date(deadline);
-
-  // 日数の差を計算
-  let diffText = '';
-  if (deadline) {
-    const diff = Math.ceil((deadlineDate - today) / (1000 * 60 * 60 * 24));
-    diffText = diff >= 0 ? `（あと${diff}日）` : `（期限切れ）`;
+  function load() {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    todos = raw ? JSON.parse(raw) : [];
   }
 
-  li.innerHTML = `
-    <span>${taskText} 
-      <span class="deadline">${deadline ? `期限: ${deadline} ${diffText}` : ''}</span>
-    </span>
-    <button class="delete-btn">削除</button>
-  `;
+  function uid() {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+  }
 
-  // 削除ボタン機能
-  li.querySelector('.delete-btn').addEventListener('click', () => {
-    li.remove();
+  function addTodo(text) {
+    const trimmed = text.trim();
+    if (!trimmed) return false;
+    todos.unshift({ id: uid(), text: trimmed, done: false });
+    save();
+    render();
+    return true;
+  }
+
+  function toggleTodo(id) {
+    const t = todos.find(x => x.id === id);
+    if (!t) return;
+    t.done = !t.done;
+    save();
+    render();
+  }
+
+  function removeTodo(id) {
+    todos = todos.filter(x => x.id !== id);
+    save();
+    render();
+  }
+
+  function clearCompleted() {
+    todos = todos.filter(x => !x.done);
+    save();
+    render();
+  }
+
+  function filtered() {
+    if (currentFilter === 'active') return todos.filter(t => !t.done);
+    if (currentFilter === 'completed') return todos.filter(t => t.done);
+    return todos;
+  }
+
+  function updateCount(){
+    const left = todos.filter(t => !t.done).length;
+    countEl.textContent = `${left} item${left !== 1 ? 's' : ''} left`;
+  }
+
+  function render() {
+    listEl.innerHTML = '';
+    const items = filtered();
+    if (items.length === 0) {
+      listEl.innerHTML = '<li class="item"><label style="color:#94a3b8">No tasks</label></li>';
+      updateCount();
+      return;
+    }
+    for (const t of items) {
+      const li = document.createElement('li');
+      li.className = 'item' + (t.done ? ' completed' : '');
+
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = t.done;
+      cb.addEventListener('change', () => toggleTodo(t.id));
+
+      const label = document.createElement('label');
+      label.textContent = t.text;
+
+      const del = document.createElement('button');
+      del.className = 'delete';
+      del.textContent = '🗑';
+      del.addEventListener('click', () => removeTodo(t.id));
+
+      li.append(cb, label, del);
+      listEl.append(li);
+    }
+    updateCount();
+  }
+
+  addBtn.addEventListener('click', () => {
+    if (addTodo(input.value)) input.value = '';
+    input.focus();
   });
 
-  // 追加して入力欄をクリア
-  taskList.appendChild(li);
-  taskInput.value = '';
-  deadlineInput.value = '';
-}
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && addTodo(input.value)) input.value = '';
+  });
+
+  filters.forEach(b => {
+    b.addEventListener('click', () => {
+      filters.forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      currentFilter = b.dataset.filter;
+      render();
+    });
+  });
+
+  clearBtn.addEventListener('click', () => {
+    if (confirm('完了済みをすべて削除しますか？')) clearCompleted();
+  });
+
+  load();
+  render();
+})();
